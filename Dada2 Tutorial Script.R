@@ -5,7 +5,7 @@
 library(dada2); packageVersion("dada2")
 
 #path to directory containing unzipped fastq files
-path <- "/c/Users/saman/OneDrive - The Pennsylvania State University/Ganda Lab/Spring 2023/Dada2_Tutorial/MiSeq_SOP"
+path <- "C:\\Users/saman/Desktop/Grad School/Ganda Lab/Spring 2023/Dada2 Tutorial/MiSeq_SOP"
 list.files(path)
 
 # Forward and reverse fastq filenames have format: SAMPLENAME_R1_001.fastq and SAMPLENAME_R2_001.fastq
