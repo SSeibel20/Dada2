@@ -18,5 +18,8 @@ sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 #visualize quality profiles of forward reads
 plotQualityProfile(fnFs[1:2])
 
+#visualize quality profiles of reverse reads
+plotQualityProfile(fnRs[1:2])
+
 #save data
 save.image(file = "Dada2_tutorial.RData")
