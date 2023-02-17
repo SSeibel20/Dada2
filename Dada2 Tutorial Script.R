@@ -47,6 +47,29 @@ head(out)
 #if not enough reads are passing this filter relax the maxEE (esp reverse reads, maxEE=c(2,5))
 #for Internal Transcribed Spacers seq, don't use trunc length
 
+#learnErrors alternates estimation of the error rates and inference sample composition until they converge
+errF <- learnErrors(filtFs, multithread=TRUE)
+errR <- learnErrors(filtRs, multithread=TRUE)
+
+#check estimated error rates by visualizing them
+plotErrors(errF, nominalQ=TRUE)
+
+#apply core sample inference algorithm
+dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
+dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
+
+#inspect dada-class
+#shows true sequence variants from unique sequences in the first sample
+dadaFs[[1]]
+
+#merge forward and reverse reads to make full denoised sequences
+#align foward with reverse complement of reverse reads and merge into contiq sequences
+#by default, merges forward and reverse sequences with 12+ base overlap
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
+
+# Inspect the merger data.frame from the first sample
+head(mergers[[1]])
+
 
 #save data
 save.image(file = "Dada2_tutorial.RData")
