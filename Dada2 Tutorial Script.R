@@ -63,13 +63,55 @@ dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
 dadaFs[[1]]
 
 #merge forward and reverse reads to make full denoised sequences
-#align foward with reverse complement of reverse reads and merge into contiq sequences
+#align forward with reverse complement of reverse reads and merge into contiq sequences
 #by default, merges forward and reverse sequences with 12+ base overlap
 mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
 
 # Inspect the merger data.frame from the first sample
 head(mergers[[1]])
 
+#construct amplicon sequence variant table
+seqtab <- makeSequenceTable(mergers)
+dim(seqtab)
+
+#inspect distribution of sequence lengths
+#rows correspond to samples
+#columns correspond to sequence variants
+table(nchar(getSequences(seqtab)))
+
+#to remove nonspecific priming issues to get amplicons of target length
+#seqtab2 <- seqtab[,nchar(colnames(seqtab)) %in% 250:256] 
+
+#remove chimeras
+#dada cannot remove chimeras on its own
+#can be identified by exactly reconstructing left and right segments from two or more abundant parent sequences
+
+seqtab.nochim <- removeBimeraDenovo(seqtab, method = "consensus", multithread=TRUE, verbose=TRUE)
+dim(seqtab.nochim)
+sum(seqtab.nochim)/sum(seqtab)
+
+#track reads through the pipeline 
+getN <- function(x) sum(getUniques(x))
+track <-cbind(out, sapply(dadaFs, getN), sapply(dadaRs, getN), sapply(mergers, getN), rowSums(seqtab.nochim))
+colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim")
+rownames(track) <- sample.names
+head(track)
+#if processing a single sample, remove the sapply calls: ex replace sapply(dadaFS, getN) with getN(dadaFs)
+
+#assign taxonomy
+#uses naive Bayesian classifier method to assign
+#assignTaxonomy function takes a set of sequences and a training set of reference sequences as input
+#assignTaxonomy function provides taxonomic assignments with at least minBoot bootstrap confidence
+
+taxa <- assignTaxonomy(seqtab.nochim, "C:\\Users/saman/OneDrive - The Pennsylvania State University/Ganda Lab/Spring 2023/Dada2_Tutorial/MiSeq_SOP/silva_nr_v132_train_set.fa.gz", multithread=TRUE)
+
+#to add species
+#taxa <- addSpecies(taxa, "~/tax/silva_species_assignment_v132.fa.gz")
+
+#inspect taxonomic assignments
+taxa.print <- taxa # Removing sequence rownames for display only
+rownames(taxa.print) <- NULL
+head(taxa.print)
 
 #save data
 save.image(file = "Dada2_tutorial.RData")
